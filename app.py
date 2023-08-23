@@ -74,6 +74,22 @@ def get_acquisitions():
             ]
         })
         
+# create a route that has search params
+@app.route('/companies/<int:id>/acquisitions', methods=['GET'])
+def get_company_acquisitions(id):
+    # return the company, and an array of all its acquisitions
+    with app.app_context():
+        company = Company.query.get(id)
+        acquisitions = Acquisition.query.filter(Acquisition.purchasing_company_id == id).limit(100).all()
+        return jsonify({
+            'company': model_to_dict(company),
+            'acquisitions': [
+                {
+                    **model_to_dict(Acquisition.query.get(acquisition.id)),
+                    'purchased_company': model_to_dict(Company.query.get(acquisition.purchased_company_id))
+                } for acquisition in acquisitions
+            ]
+        })
 
 @app.route('/acquisitions/<int:id>', methods=['GET'])
 def get_acquisition(id):
@@ -86,7 +102,6 @@ def get_acquisition(id):
             'purchased_company': model_to_dict(purchased_company),
             'purchasing_company': model_to_dict(purchasing_company)
         })
-    
     
 
 if __name__ == '__main__':
